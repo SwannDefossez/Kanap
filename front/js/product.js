@@ -5,7 +5,6 @@ const urlSearchParams = new URLSearchParams(urlSearch);
 const id = urlSearchParams.get("id");
 console.log(id);
 
-
 // Constantes qui serviront à ajouter des éléments HTML
 const button = document.querySelector("#addToCart");
 const img = document.querySelector(".item__img");
@@ -43,44 +42,49 @@ fetch(`http://localhost:3000/api/products/${id}`)
     for (let i = 0; i < productData.colors.length; i++) {
       const productColors = document.createElement("option");
       productColors.setAttribute("value", `${productData.colors[i]}`);
-      productColors.textContent = `${productData.colors[i]}`
-      colors.appendChild(productColors)
+      productColors.textContent = `${productData.colors[i]}`;
+      colors.appendChild(productColors);
     }
 
     // ajouts des données dans l'objet
-    productValue.id = productData._id
-    document.getElementById('colors').addEventListener('change', function () {
+    productValue.id = productData._id;
+    document.getElementById('colors').addEventListener("change", function () {
       console.log('Couleur: ', this.value);
       productValue.colors = this.value;
     });
+
+
   })
   .catch(function (err) {
     console.log("err");
   });
 
 
+
 // fonction pour bloquer la quantité au minimum/maximum
-document.getElementById("quantity").addEventListener("change", function () {
-  let v = parseInt(this.value);
+function quantityFix() {
   if (this.value > 0 && this.value < 101 && this.value % 1 == 0) {
     productValue.quantity = this.value;
-    console.log(productValue)
+    console.log(productValue);
   } else {
-    this.value = 1
+    this.value = 1;
   }
-  
-});
+  let value = this.value;
+  return value;
+};
+document.getElementById("quantity").addEventListener("change", quantityFix);
+
 
 
 // fonction pour ajouter l'objet dans le localStorage
-button.addEventListener("click", function () {
+button.addEventListener("click", () => {
   if (productValue.colors == "" || productValue.quantity == "") {
     alert("Veuillez choisir une couleur/quantité");
 
   } else {
-    var oldData = JSON.parse(localStorage.getItem("product"));
+    let oldData = JSON.parse(localStorage.getItem("product"));
     if (oldData == null) {
-      oldData = []
+      oldData = [];
     }
     let getArticle = oldData.find((product) => product.id == productValue.id && product.colors == productValue.colors);
     if (getArticle) {
