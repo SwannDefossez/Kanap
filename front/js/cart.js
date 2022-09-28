@@ -1,14 +1,7 @@
-const items = document.getElementById("cart__items");
-const totalPrice = document.getElementById("totalPrice");
-let deleteButton = document.getElementsByClassName("deleteItem");
-let localStorageData = JSON.parse(localStorage.getItem("product"));
 
-let prix = 0;
+let tri = getProductLS();
 
-
-
-// Tri des produits par Id
-localStorageData.sort(compare = (a, b) => {
+tri.sort(compare = (a, b) => {
     if (a.id < b.id)
         return -1;
     if (a.id > b.id)
@@ -17,155 +10,219 @@ localStorageData.sort(compare = (a, b) => {
 });
 
 
-console.log(localStorageData);
-
-for (let i = 0 ; i < localStorageData.length ; i++ ) {
-    fetch(`http://localhost:3000/api/products/${localStorageData[i].id}`)
-        .then((res) => res.json())
-        .then((value) => {
-            productData = value;
-            
-
-            // Création balise article
-            const productArticle = document.createElement("article");
-            productArticle.setAttribute("class", "cart__item");
-            productArticle.setAttribute("data-id", `${productData._id}`);
-            productArticle.setAttribute("id", i);
-            productArticle.setAttribute("data-color", `${productData.colors}`);
-            items.appendChild(productArticle);
-
-            // Création balise div image
-            const productDivImage = document.createElement("div");
-            productDivImage.setAttribute("class", "cart__item__img");
-            productArticle.appendChild(productDivImage);
-
-            // Création Image
-            const productImg = document.createElement("img");
-            productImg.setAttribute("src", `${productData.imageUrl}`);
-            productImg.setAttribute("alt", `${productData.imageAlt}`);
-            productDivImage.appendChild(productImg);
-
-            // Création balise div ItemContent
-            const ItemContent = document.createElement("div");
-            ItemContent.setAttribute("class", "cart__item__content");
-            productArticle.appendChild(ItemContent);
-
-            // Création balise div ItemContentDescription
-            const ItemContentDescription = document.createElement("div");
-            ItemContentDescription.setAttribute("class", "cart__item__content__description");
-            ItemContent.appendChild(ItemContentDescription);
-
-            // Création <h2> nom du produit
-            const productName = document.createElement("h2");
-            productName.textContent = `${productData.name}`;
-            ItemContentDescription.appendChild(productName);
-
-            // Création <p> couleur
-            const productColors = document.createElement("p");
-            productColors.textContent = `${localStorageData[i].colors}`;
-            ItemContentDescription.appendChild(productColors);
-
-            // Création <p> prix
-            const productPrice = document.createElement("p");
-            prix = localStorageData[i].quantity * productData.price;
-            productPrice.textContent = prix + "€";
-            ItemContentDescription.appendChild(productPrice);
 
 
-            // Création balise div ItemContentSettings
-            const ItemContentSettings = document.createElement("div");
-            ItemContentSettings.setAttribute("class", "cart__item__content__settings");
-            ItemContent.appendChild(ItemContentSettings);
+const items = document.getElementById("cart__items");
 
-            // Création balise div ItemContentSettingsQuantity
-            const ItemContentSettingsQuantity = document.createElement("div");
-            ItemContentSettingsQuantity.setAttribute("class", "cart__item__content__settings__quantity");
-            ItemContentSettings.appendChild(ItemContentSettingsQuantity);
-
-
-            // Création <p> quantité
-            const productQuantity = document.createElement("p");
-            productQuantity.textContent = "Quantité : " + localStorageData[i].quantity;
-            ItemContentSettingsQuantity.appendChild(productQuantity);
-
-
-            // Création <input>
-            const productQuantityInput = document.createElement("input");
-            productQuantityInput.setAttribute("type", "number");
-            productQuantityInput.setAttribute("class", "itemQuantity");
-            productQuantityInput.setAttribute("name", "itemQuantity")
-            productQuantityInput.setAttribute("min", "1");
-            productQuantityInput.setAttribute("max", "100");
-            productQuantityInput.setAttribute("value", `${localStorageData[i].quantity}`);
-            ItemContentSettingsQuantity.appendChild(productQuantityInput);
-            productQuantityInput.addEventListener("change", (e) => {
-                if (productQuantityInput.value > 0 && productQuantityInput.value < 101 && productQuantityInput.value % 1 == 0) {
-                    localStorageData[i].quantity = e.target.value;
-                    localStorage.setItem("product", JSON.stringify(localStorageData));
-                    localStorageData = JSON.parse(localStorage.getItem("product"));
-                    prix = localStorageData[i].quantity * productData.price;
-                    productPrice.textContent = prix + "€";
-                    productQuantity.textContent = "Quantité : " + localStorageData[i].quantity;
-                    total()
-                } else {
-                    productQuantityInput.value = localStorageData[i].quantity;
-                }
-                productQuantity.textContent = "Quantité : " + e.target.value;
-            });
-
-            // Création balise div ItemContentSettingsDelete
-            const ItemContentSettingsDelete = document.createElement("div");
-            ItemContentSettingsDelete.setAttribute("class", "cart__item__content__settings__delete");
-            ItemContentSettings.appendChild(ItemContentSettingsDelete);
-
-            // Création <p> delete
-            const productDelete = document.createElement("p");
-            productDelete.textContent = "Supprimer";
-            productDelete.setAttribute("class", "deleteItem");
-            ItemContentSettingsDelete.appendChild(productDelete);
-
-
-            productDelete.addEventListener("click", (e) => {
-                console.log(i);
-                console.log(localStorageData);
-                const number = document.getElementById(i);
-                number.remove();
-                localStorageData.splice([i], 1);
-                localStorage.removeItem("product");
-                const articles = document.getElementsByClassName(`cart__item`);
-                console.log(articles);
-                for( let j = 0 ; j < articles.length ; j++ ) {
-                    articles[j].setAttribute("id", j);
-                };
-                
-                localStorage.setItem("product", JSON.stringify(localStorageData));
-                // alert("Produit supprimé du panier");
-                // window.location.href = "cart.html";
-                
-            });
-            total();
-
-        })
-        .catch((err) => {
-            console.log("err");
-        })
+const init = async () => {
+    const productLS = await getProductLS();
+    displayProduct(productLS);
+    deleteItem(productLS);
+    totalQuantity();
+    checkProductLS();
 };
+init();
+
+function getProductLS() {
+    return JSON.parse(localStorage.getItem("product"));
+}
 
 
 
-// Calcule le prix total et la quantité totale
-total = () => {
-    let totalQuantity = document.getElementById("totalQuantity");
-    let number = 0;
-    let total = 0;
-    for (let i of localStorageData) {
-        total += i.quantity * productData.price;
-        number += JSON.parse(i.quantity);
+
+
+
+
+
+
+
+
+
+console.log(getProductLS());
+
+async function checkProductLS() {
+    const productLS = await getProductLS();
+    if (productLS.length == 0) {
+        items.textContent = "Il n'y a aucun produit dans le panier";
+        return true;
     }
-    totalQuantity.textContent = number;
-    totalPrice.textContent = total;
-    return { localStorageData, prix };
+}
+
+async function displayProduct(productLS) {
+    for (let item of productLS) {
+        fetch(`http://localhost:3000/api/products/${item.id}`)
+            .then((res) => res.json())
+            .then((product) => {
+
+                // Création balise article
+                const productArticle = document.createElement("article");
+                productArticle.setAttribute("class", "cart__item");
+                productArticle.setAttribute("data-id", `${item.id}`);
+                productArticle.setAttribute("data-color", `${item.colors}`);
+                items.appendChild(productArticle);
+
+                // Création balise div image
+                const productDivImage = document.createElement("div");
+                productDivImage.setAttribute("class", "cart__item__img");
+                productArticle.appendChild(productDivImage);
+
+                // Création Image
+                const productImg = document.createElement("img");
+                productImg.setAttribute("src", `${product.imageUrl}`);
+                productImg.setAttribute("alt", `${product.imageAlt}`);
+                productDivImage.appendChild(productImg);
+
+                // Création balise div ItemContent
+                const ItemContent = document.createElement("div");
+                ItemContent.setAttribute("class", "cart__item__content");
+                productArticle.appendChild(ItemContent);
+
+                // Création balise div ItemContentDescription
+                const ItemContentDescription = document.createElement("div");
+                ItemContentDescription.setAttribute("class", "cart__item__content__description");
+                ItemContent.appendChild(ItemContentDescription);
+
+                // Création <h2> nom du produit
+                const productName = document.createElement("h2");
+                productName.textContent = `${product.name}`;
+                ItemContentDescription.appendChild(productName);
+
+                // Création <p> couleur
+                const productColors = document.createElement("p");
+                productColors.textContent = `${item.colors}`;
+                ItemContentDescription.appendChild(productColors);
+
+                // Création <p> prix
+                const productPrice = document.createElement("p");
+                productPrice.textContent = `${product.price} €`;
+                productPrice.setAttribute("class", "price");
+                ItemContentDescription.appendChild(productPrice);
+
+
+                // Création balise div ItemContentSettings
+                const ItemContentSettings = document.createElement("div");
+                ItemContentSettings.setAttribute("class", "cart__item__content__settings");
+                ItemContent.appendChild(ItemContentSettings);
+
+                // Création balise div ItemContentSettingsQuantity
+                const ItemContentSettingsQuantity = document.createElement("div");
+                ItemContentSettingsQuantity.setAttribute("class", "cart__item__content__settings__quantity");
+                ItemContentSettings.appendChild(ItemContentSettingsQuantity);
+
+
+                // Création <p> quantité
+                const productQuantity = document.createElement("p");
+                productQuantity.textContent = "Quantité : ";
+                ItemContentSettingsQuantity.appendChild(productQuantity);
+
+
+                // Création <input>
+                const productQuantityInput = document.createElement("input");
+                productQuantityInput.setAttribute("type", "number");
+                productQuantityInput.setAttribute("class", "itemQuantity");
+                productQuantityInput.setAttribute("name", "itemQuantity")
+                productQuantityInput.setAttribute("min", "1");
+                productQuantityInput.setAttribute("max", "100");
+                productQuantityInput.setAttribute("value", `${item.quantity}`);
+                ItemContentSettingsQuantity.appendChild(productQuantityInput);
+                // Création balise div ItemContentSettingsDelete
+                const ItemContentSettingsDelete = document.createElement("div");
+                ItemContentSettingsDelete.setAttribute("class", "cart__item__content__settings__delete");
+                ItemContentSettings.appendChild(ItemContentSettingsDelete);
+
+                // Création <p> delete
+                const productDelete = document.createElement("p");
+                productDelete.textContent = "Supprimer";
+                productDelete.setAttribute("class", "deleteItem");
+                ItemContentSettingsDelete.appendChild(productDelete);
+
+
+
+                totalPrice();
+                totalQuantity();
+                changeQuantity(product, productLS);
+                deleteItem(product);
+                checkProductLS();
+
+
+            })
+            .catch((err) => {
+                console.log("err");
+            })
+    };
 };
+
+
+
+async function totalPrice() {
+    let kanap = await getProductLS();
+    let quantities = document.querySelectorAll(".itemQuantity");
+    let prices = document.querySelectorAll(".cart__item__content__description");
+    let cartPrice = 0;
+    for (let i = 0; i < prices.length; i++) {
+        cartPrice +=
+            parseInt(prices[i].lastElementChild.textContent) * quantities[i].value;
+    }
+    document.getElementById("totalPrice").textContent = cartPrice;
+    saveProductLS(kanap);
+};
+
+async function totalQuantity() {
+    let kanap = await getProductLS();
+    let total = 0;
+    for (const item of kanap) {
+        total += parseInt(item.quantity);
+    }
+    const tQuantity = document.querySelector("#totalQuantity");
+    tQuantity.textContent = total;
+    saveProductLS(kanap);
+};
+
+function deleteItem(product) {
+    const deleteButtons = document.querySelectorAll(".deleteItem");
+    deleteButtons.forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+            const target = e.target.closest(".cart__item").dataset.id;
+            const color = e.target.closest(".cart__item").dataset.color;
+            const deleteItem = e.target.closest(".cart__item");
+            let kanap = await getProductLS();
+            kanap = kanap.filter((item) => {
+                return item.id != target || item.colors != color;
+            });
+            deleteItem.remove();
+            saveProductLS(kanap);
+            totalQuantity();
+            totalPrice();
+            checkProductLS();
+        });
+    });
+};
+
+
+function saveProductLS(product) {
+    return localStorage.setItem("product", JSON.stringify(product));
+};
+
+
+async function changeQuantity(product, productLS) {
+    let kanap = await getProductLS();
+    let inputQuantity = document.querySelectorAll(".itemQuantity");
+
+    inputQuantity.forEach((item) => {
+        item.addEventListener("input", (e) => {
+            const target = e.target.closest(".cart__item").dataset.id;
+            const color = e.target.closest(".cart__item").dataset.color;
+            let kanapFind = kanap.find((item) => {
+                return item.id == target && item.colors == color;
+            });
+            kanapFind.quantity = parseInt(e.target.value);
+            saveProductLS(kanap);
+            totalQuantity();
+            totalPrice();
+        });
+    });
+
+}
 
 
 let contact = {
@@ -198,6 +255,32 @@ let emailRegex = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,
 let submit = document.querySelector("#order");
 
 
+
+// formValidator = (champ, champError , champRegex , champTextError) => {
+//     champ.addEventListener("input", (e) => {
+//         valid(e.target.value);
+//         contact.champ = e.target.value;
+//     });
+
+//     valid = (champ) => {
+//         let valid = false;
+//         let test = champRegex.test(champ);
+//         if (test) {
+//             champError.textContent = "";
+//             valid = true;
+//         } else {
+//             champError.textContent = `${champTextError}`;
+//             valid = false;
+//         }
+//         return valid;
+//     };
+// };
+
+// formValidator(firstName , firstNameErrorMsg , firstNameRegex , "Prenom invalide");
+// formValidator(lastName , lastNameErrorMsg , lastNameRegex , "Nom invalide");
+
+
+
 firstName.addEventListener("input", (e) => {
     validFirstName(e.target.value);
     contact.firstName = e.target.value;
@@ -215,6 +298,7 @@ validFirstName = (firstName) => {
     }
     return valid;
 }
+
 
 lastName.addEventListener("input", (e) => {
     validLastName(e.target.value);
@@ -290,6 +374,8 @@ validEmail = (email) => {
     }
     return valid;
 }
+
+
 let products = [];
 
 let ordeButton = document.querySelector("#order").addEventListener("click", (e) => {
@@ -314,8 +400,8 @@ let ordeButton = document.querySelector("#order").addEventListener("click", (e) 
 
         localStorage.setItem("contact", JSON.stringify(contact));
 
-
-        for (let i of localStorageData) {
+        let kanap = getProductLS();
+        for (let i of kanap) {
             products.push(i.id)
         };
 
