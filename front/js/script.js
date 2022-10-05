@@ -1,4 +1,3 @@
-// récupération de la balise ayant l'id "items"
 const items = document.querySelector("#items");
 
 // requête GET à l'API
@@ -11,7 +10,6 @@ fetch("http://localhost:3000/api/products")
   .then((value) => {
     console.table(value);
 
-  
     // Boucle qui se répète pour chaque canapé dans la BDD
     for (let i of value) {
 
@@ -28,20 +26,20 @@ fetch("http://localhost:3000/api/products")
 
       // Création balise img
       const productImg = document.createElement("img");
-      productImg.setAttribute("src",`${i.imageUrl}`);
-      productImg.setAttribute("alt",`${i.altTxt}`);
+      productImg.setAttribute("src",i.imageUrl);
+      productImg.setAttribute("alt",i.altTxt);
       productArticle.appendChild(productImg);
 
       // Création balise h3 (Nom du canapé)
       const productName = document.createElement("h3");
       productName.classList.add("productName");
-      productName.textContent = `${i.name}`;
+      productName.textContent = i.name;
       productArticle.appendChild(productName);
 
       // Création balise p (Description)
       const productDesc = document.createElement("p");
       productDesc.classList.add("productDescription");
-      productDesc.textContent = `${i.description}`;
+      productDesc.textContent = i.description;
       productArticle.appendChild(productDesc);
 
     };

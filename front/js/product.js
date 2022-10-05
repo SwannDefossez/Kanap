@@ -5,7 +5,7 @@ const urlSearchParams = new URLSearchParams(urlSearch);
 const id = urlSearchParams.get("id");
 console.log(id);
 
-// Constantes qui serviront à ajouter des éléments HTML
+
 const button = document.querySelector("#addToCart");
 const img = document.querySelector(".item__img");
 const price = document.querySelector("#price");
@@ -34,15 +34,15 @@ fetch(`http://localhost:3000/api/products/${id}`)
     img.appendChild(productImg);
 
     // Modification du texte en fonction du canapé
-    title.textContent = `${productData.name}`;
-    price.textContent = `${productData.price}`;
-    desc.textContent = `${productData.description}`;
+    title.textContent = productData.name;
+    price.textContent = productData.price;
+    desc.textContent = productData.description;
 
     // Boucle pour créer toutes les options de couleurs
     for (let i = 0; i < productData.colors.length; i++) {
       const productColors = document.createElement("option");
-      productColors.setAttribute("value", `${productData.colors[i]}`);
-      productColors.textContent = `${productData.colors[i]}`;
+      productColors.setAttribute("value", productData.colors[i]);
+      productColors.textContent = productData.colors[i];
       colors.appendChild(productColors);
     }
 
@@ -61,7 +61,7 @@ fetch(`http://localhost:3000/api/products/${id}`)
 
 
 
-// fonction pour bloquer la quantité au minimum/maximum
+// fonction pour bloquer la quantité au minimum/maximum et les nombres décimaux
 function quantityFix() {
   if (this.value > 0 && this.value < 101 && this.value % 1 == 0) {
     productValue.quantity = this.value;
@@ -83,11 +83,11 @@ button.addEventListener("click", () => {
 
   } else {
     let oldData = JSON.parse(localStorage.getItem("product"));
-    if (oldData == null) {
+    if (oldData == null) {    // Si le localStorage est vide
       oldData = [];
     }
     let getArticle = oldData.find((product) => product.id == productValue.id && product.colors == productValue.colors);
-    if (getArticle) {
+    if (getArticle) { // Si le produit/couleur se trouve déjà dans le localStorage
       getArticle.quantity = Number(productValue.quantity) + Number(getArticle.quantity);
       localStorage.setItem("product", JSON.stringify(oldData));
       window.confirm(`Quantité ajouté : ${productValue.quantity}`);

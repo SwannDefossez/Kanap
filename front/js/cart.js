@@ -1,6 +1,6 @@
 
-let tri = getProductLS();
-
+// Tri des produits avec l'id
+let tri = getProduct();
 tri.sort(compare = (a, b) => {
     if (a.id < b.id)
         return -1;
@@ -9,45 +9,36 @@ tri.sort(compare = (a, b) => {
     return 0;
 });
 
-
-
-
 const items = document.getElementById("cart__items");
 
-const init = async () => {
-    const productLS = await getProductLS();
+// initialisation des fonctions
+const initialisation = async () => {
+    const productLS = await getProduct();
     displayProduct(productLS);
     deleteItem(productLS);
     totalQuantity();
-    checkProductLS();
+    checkProduct();
 };
-init();
+initialisation();
 
-function getProductLS() {
+// récuperer le contenu du localStorage
+function getProduct() {
     return JSON.parse(localStorage.getItem("product"));
 }
 
+console.log(getProduct());
 
-
-
-
-
-
-
-
-
-
-
-console.log(getProductLS());
-
-async function checkProductLS() {
-    const productLS = await getProductLS();
+// vérification du localStorage
+async function checkProduct() {
+    const productLS = await getProduct();
     if (productLS.length == 0) {
         items.textContent = "Il n'y a aucun produit dans le panier";
         return true;
     }
 }
 
+
+// affichage des produits
 async function displayProduct(productLS) {
     for (let item of productLS) {
         fetch(`http://localhost:3000/api/products/${item.id}`)
@@ -142,7 +133,7 @@ async function displayProduct(productLS) {
                 totalQuantity();
                 changeQuantity(product, productLS);
                 deleteItem(product);
-                checkProductLS();
+                checkProduct();
 
 
             })
@@ -153,9 +144,9 @@ async function displayProduct(productLS) {
 };
 
 
-
+// calcul du prix total
 async function totalPrice() {
-    let kanap = await getProductLS();
+    let kanap = await getProduct();
     let quantities = document.querySelectorAll(".itemQuantity");
     let prices = document.querySelectorAll(".cart__item__content__description");
     let cartPrice = 0;
@@ -164,20 +155,22 @@ async function totalPrice() {
             parseInt(prices[i].lastElementChild.textContent) * quantities[i].value;
     }
     document.getElementById("totalPrice").textContent = cartPrice;
-    saveProductLS(kanap);
+    saveProduct(kanap);
 };
 
+// calcul de la quantité total
 async function totalQuantity() {
-    let kanap = await getProductLS();
+    let kanap = await getProduct();
     let total = 0;
     for (const item of kanap) {
         total += parseInt(item.quantity);
     }
     const tQuantity = document.querySelector("#totalQuantity");
     tQuantity.textContent = total;
-    saveProductLS(kanap);
+    saveProduct(kanap);
 };
 
+// supprimer un produit
 function deleteItem(product) {
     const deleteButtons = document.querySelectorAll(".deleteItem");
     deleteButtons.forEach((btn) => {
@@ -185,27 +178,27 @@ function deleteItem(product) {
             const target = e.target.closest(".cart__item").dataset.id;
             const color = e.target.closest(".cart__item").dataset.color;
             const deleteItem = e.target.closest(".cart__item");
-            let kanap = await getProductLS();
+            let kanap = await getProduct();
             kanap = kanap.filter((item) => {
                 return item.id != target || item.colors != color;
             });
             deleteItem.remove();
-            saveProductLS(kanap);
+            saveProduct(kanap);
             totalQuantity();
             totalPrice();
-            checkProductLS();
+            checkProduct();
         });
     });
 };
 
-
-function saveProductLS(product) {
+// sauvegarder dans le localStorage
+function saveProduct(product) {
     return localStorage.setItem("product", JSON.stringify(product));
 };
 
-
+// changer la qté depuis le panier
 async function changeQuantity(product, productLS) {
-    let kanap = await getProductLS();
+    let kanap = await getProduct();
     let inputQuantity = document.querySelectorAll(".itemQuantity");
 
     inputQuantity.forEach((item) => {
@@ -216,7 +209,7 @@ async function changeQuantity(product, productLS) {
                 return item.id == target && item.colors == color;
             });
             kanapFind.quantity = parseInt(e.target.value);
-            saveProductLS(kanap);
+            saveProduct(kanap);
             totalQuantity();
             totalPrice();
         });
@@ -224,7 +217,7 @@ async function changeQuantity(product, productLS) {
 
 }
 
-
+// objet vide pour sauvegarder les informations clients
 let contact = {
     firstName: "",
     lastName: "",
@@ -256,124 +249,39 @@ let submit = document.querySelector("#order");
 
 
 
-// formValidator = (champ, champError , champRegex , champTextError) => {
-//     champ.addEventListener("input", (e) => {
-//         valid(e.target.value);
-//         contact.champ = e.target.value;
-//     });
-
-//     valid = (champ) => {
-//         let valid = false;
-//         let test = champRegex.test(champ);
-//         if (test) {
-//             champError.textContent = "";
-//             valid = true;
-//         } else {
-//             champError.textContent = `${champTextError}`;
-//             valid = false;
-//         }
-//         return valid;
-//     };
-// };
-
-// formValidator(firstName , firstNameErrorMsg , firstNameRegex , "Prenom invalide");
-// formValidator(lastName , lastNameErrorMsg , lastNameRegex , "Nom invalide");
-
-
 
 firstName.addEventListener("input", (e) => {
-    validFirstName(e.target.value);
-    contact.firstName = e.target.value;
+    formValidator(firstName.value , firstNameErrorMsg , firstNameRegex , "Prénom Invalide") ;
 });
-
-validFirstName = (firstName) => {
-    let valid = false;
-    let testName = firstNameRegex.test(firstName);
-    if (testName) {
-        firstNameErrorMsg.textContent = "";
-        valid = true;
-    } else {
-        firstNameErrorMsg.textContent = "Prénom non valide";
-        valid = false;
-    }
-    return valid;
-}
-
 
 lastName.addEventListener("input", (e) => {
-    validLastName(e.target.value);
-    contact.lastName = e.target.value;
+    formValidator(lastName.value ,lastNameErrorMsg ,lastNameRegex , "Nom Invalide") ;
 });
-
-validLastName = (lastName) => {
-    let valid = false;
-    let testLastName = lastNameRegex.test(lastName);
-    if (testLastName) {
-        lastNameErrorMsg.innerText = "";
-        valid = true;
-    } else {
-        lastNameErrorMsg.textContent = "Nom non valide";
-        valid = false;
-    }
-    return valid;
-}
-
 
 address.addEventListener("input", (e) => {
-    validAddress(e.target.value);
-    contact.address = e.target.value;
+    formValidator(address.value ,addressErrorMsg ,addressRegex , "Adresse Invalide") ;
 });
-
-validAddress = (address) => {
-    let valid = false;
-    let testAddress = addressRegex.test(address);
-    if (testAddress) {
-        addressErrorMsg.textContent = "";
-        valid = true;
-    } else {
-        addressErrorMsg.textContent = "Adresse non valide";
-        valid = false;
-    }
-    return valid;
-}
-
 
 city.addEventListener("input", (e) => {
-    validCity(e.target.value);
-    contact.city = e.target.value;
+    formValidator(city.value ,cityErrorMsg ,cityRegex , "Ville Invalide") ;
 });
-
-validCity = (city) => {
-    let valid = false;
-    let testCity = cityRegex.test(city);
-    if (testCity) {
-        cityErrorMsg.textContent = "";
-        valid = true;
-    } else {
-        cityErrorMsg.textContent = "Ville non valide";
-        valid = false;
-    }
-    return valid;
-}
-
 
 email.addEventListener("input", (e) => {
-    validEmail(e.target.value);
-    contact.email = e.target.value;
+    formValidator(email.value ,emailErrorMsg ,emailRegex , "Email Invalide") ;
 });
 
-validEmail = (email) => {
-    let valid = false;
-    let testEmail = emailRegex.test(email);
-    if (testEmail) {
-        emailErrorMsg.textContent = "";
-        valid = true;
-    } else {
-        emailErrorMsg.textContent = "Email non valide";
-        valid = false;
-    }
-    return valid;
-}
+// fonction pour tester les champs du formulaire
+formValidator = (champ, champError , champRegex , champTextError) => {   
+        let test = champRegex.test(champ);
+        if (test) {
+            champError.textContent = "";
+            valid = true;
+        } else {
+            champError.textContent = champTextError; 
+            valid = false;
+        }
+};
+
 
 
 let products = [];
@@ -398,9 +306,19 @@ let ordeButton = document.querySelector("#order").addEventListener("click", (e) 
         window.alert("Coordonnées invalide");
     } else {
 
+
+        contact = {
+            firstName: firstName.value ,
+            lastName: lastName.value,
+            address: address.value,
+            city: city.value,
+            email: email.value,
+        };
+        
+
         localStorage.setItem("contact", JSON.stringify(contact));
 
-        let kanap = getProductLS();
+        let kanap = getProduct();
         for (let i of kanap) {
             products.push(i.id)
         };
@@ -409,7 +327,7 @@ let ordeButton = document.querySelector("#order").addEventListener("click", (e) 
             contact: contact,
             products: products,
         };
-
+        console.log(JSON.stringify(order));
 
         fetch("http://localhost:3000/api/products/order", {
             method: "POST",
@@ -420,7 +338,9 @@ let ordeButton = document.querySelector("#order").addEventListener("click", (e) 
         })
             .then((res) => res.json())
             .then((data) => {
+
                 let orderId = data.orderId;
+               
                 window.location.assign("confirmation.html?id=" + orderId);
 
             });
